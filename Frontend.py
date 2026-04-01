@@ -1,5 +1,5 @@
 import streamlit as st
-from make_proud.Backend import workflow,retrieve_all_threads
+from Backend import workflow,retrieve_all_threads
 from langchain_core.messages import HumanMessage,AIMessage,ToolMessage
 from uuid import uuid4
 
@@ -10,8 +10,7 @@ def thread_id():
     return str(uuid4())
 
 def new_chat():
-    thread_id = thread_id()
-    st.session_state['tread_id'] = thread_id
+    st.session_state['tread_id'] =thread_id()
     tread_history(st.session_state['tread_id'])  
     st.session_state['message_history'] = []
 
