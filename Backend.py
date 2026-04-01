@@ -10,7 +10,7 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode,tools_condition
 from langchain_community.tools import DuckDuckGoSearchRun
 import sqlite3
-
+import requests
 import os
 
 #loading all env
@@ -18,8 +18,8 @@ load_dotenv()
 
 # loading model here
 model = ChatGroq(
-    # model="llama-3.1-8b-instant", ---> it for Rag
-    model= "qwen/qwen3-32b",
+    model="llama-3.1-8b-instant",
+    # model= "qwen/qwen3-32b",
     api_key=os.environ["GROQ_API_KEY"]
 )
 
@@ -28,7 +28,28 @@ class ChatState(TypedDict):
     messages : Annotated[list[BaseMessage],add_messages]
 
 search = DuckDuckGoSearchRun()
-tools = [search]
+
+@tool
+def weather_tool(city: str) -> str:
+    """Get current weather for a city"""
+    
+    api_key = os.getenv("API_KEY")
+ 
+
+    url = "https://api.weatherapi.com/v1/current.json"
+    params = {
+        "key": api_key,
+        "q": city,
+        "aqi": "no"
+    }
+
+    response = requests.get(url)
+    response.raise_for_status()
+    data = response.json()
+
+    return data
+    
+tools = [search,weather_tool]
 model_tools = model.bind_tools(tools)
 
 #make Node
@@ -36,8 +57,6 @@ def chat_node(state:ChatState):
     response = model_tools.invoke(state["messages"])
     
     return {'messages':[response]}
-
-
 
 
 tool_node = ToolNode(tools)
